@@ -23,4 +23,9 @@ app.use(cookieparser());
 app.get("/", (req, res) => {
   res.send("Server working");
 });
+
+//routes
+import userRoute from "./routes/user.routes";
+app.use("/api/user", userRoute);
+
 export { app };
