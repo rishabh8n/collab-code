@@ -1,4 +1,4 @@
-import { User, UserType } from "../models/user.model";
+import { User, UserProps } from "../models/user.model";
 import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
@@ -6,7 +6,7 @@ import { Request, Response } from "express";
 
 const registerUser = asyncHandler(async (req: Request, res: Response) => {
   //get user data from request
-  const { name, username, email, password }: UserType = req.body;
+  const { name, username, email, password }: UserProps = req.body;
 
   //validate
   if (!name) throw new ApiError(401, "Name is required");

@@ -1,8 +1,9 @@
 import { NextFunction } from "express";
 import bcrypt from "bcrypt";
-import { Schema, model, Document } from "mongoose";
+import { Schema, model, Document, Model } from "mongoose";
+import jwt from "jsonwebtoken";
 
-export interface UserType extends Document {
+export interface UserProps extends Document {
   name: string;
   username: String;
   email: String;
@@ -11,7 +12,13 @@ export interface UserType extends Document {
   starred?: String[];
 }
 
-const userSchema = new Schema<UserType>(
+interface UserMethods {
+  isPasswordCorrect(password: string): boolean;
+}
+
+type UserModel = Model<UserProps, {}, UserMethods>;
+
+const userSchema = new Schema<UserProps, UserModel, UserMethods>(
   {
     name: {
       type: String,
@@ -47,8 +54,27 @@ const userSchema = new Schema<UserType>(
   { timestamps: true },
 );
 
-userSchema.pre("save", async function (this: UserType): Promise<void> {
+userSchema.pre("save", async function (this: UserProps): Promise<void> {
   if (!this.isModified("password")) return;
   this.password = await bcrypt.hash(this.password, 10);
 });
-export const User = model("User", userSchema);
+
+userSchema.method(
+  "isPasswordCorrect",
+  async function (this: UserProps, password: string) {
+    return await bcrypt.compare(password, this.password);
+  },
+);
+userSchema.method("generateAccessToken", function (this: UserProps) {
+  let sec: string = process.env.ACCESS_TOKEN_SECRET as string;
+  return jwt.sign({ _id: this._id }, sec, {
+    expiresIn: process.env.ACCESS_TOKEN_DURATION,
+  });
+});
+userSchema.method("generateRefreshToken", function (this: UserProps) {
+  let sec: string = process.env.REFRESH_TOKEN_SECRET as string;
+  return jwt.sign({ _id: this._id }, sec, {
+    expiresIn: process.env.REFRESH_TOKEN_DURATION,
+  });
+});
+export const User = model<UserProps, UserModel>("User", userSchema);
