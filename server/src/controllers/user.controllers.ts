@@ -77,14 +77,25 @@ const loginUser = asyncHandler(async (req: Request, res: Response) => {
   //send response with cookies
   res
     .status(201)
-    .cookie("ACCESS_TOKEN", accessToken, { maxAge: 100000 })
+    .cookie("ACCESS_TOKEN", accessToken, {
+      httpOnly: true,
+      secure: true,
+    })
+    .cookie("REFRESH_TOKEN", refreshToken, {
+      httpOnly: true,
+      secure: true,
+    })
     .send(
-      new ApiResponse(201, {
-        username: savedUser.username,
-        email: savedUser.email,
-        refreshToken: savedUser.refreshToken,
-        starred: savedUser.starred,
-      }),
+      new ApiResponse(
+        201,
+        {
+          username: savedUser.username,
+          email: savedUser.email,
+          refreshToken: savedUser.refreshToken,
+          starred: savedUser.starred,
+        },
+        "user logged in successfully",
+      ),
     );
 });
 
