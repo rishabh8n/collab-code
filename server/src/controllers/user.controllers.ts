@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
 import { Request, Response } from "express";
+import jwt from "jsonwebtoken";
 
 const registerUser = asyncHandler(async (req: Request, res: Response) => {
   //get user data from request
@@ -59,7 +60,7 @@ const loginUser = asyncHandler(async (req: Request, res: Response) => {
   if (!user) throw new ApiError(401, "email is not registered");
 
   //compare password
-  if (!user.isPasswordCorrect(password)) {
+  if (!(await user.isPasswordCorrect(password))) {
     throw new ApiError(401, "Incorrect password");
   }
 

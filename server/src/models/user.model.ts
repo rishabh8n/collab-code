@@ -13,7 +13,7 @@ export interface UserProps extends Document {
 }
 
 interface UserMethods {
-  isPasswordCorrect(password: string): boolean;
+  isPasswordCorrect(password: string): Promise<boolean>;
   generateAccessToken(): string;
   generateRefreshToken(): string;
 }
