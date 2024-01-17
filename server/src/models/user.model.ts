@@ -14,6 +14,8 @@ export interface UserProps extends Document {
 
 interface UserMethods {
   isPasswordCorrect(password: string): boolean;
+  generateAccessToken(): string;
+  generateRefreshToken(): string;
 }
 
 type UserModel = Model<UserProps, {}, UserMethods>;

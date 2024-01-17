@@ -50,6 +50,41 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
   );
 });
 
-const loginUser = asyncHandler((req: Request, res: Response) => {});
+const loginUser = asyncHandler(async (req: Request, res: Response) => {
+  //get user data from request
+  const { email, password }: { email: string; password: string } = req.body;
+
+  //find user
+  const user = await User.findOne({ email });
+  if (!user) throw new ApiError(401, "email is not registered");
+
+  //compare password
+  if (!user.isPasswordCorrect(password)) {
+    throw new ApiError(401, "Incorrect password");
+  }
+
+  //generate tokens
+  const accessToken = user.generateAccessToken();
+  const refreshToken = user.generateRefreshToken();
+
+  //save refresh token in database
+  user.refreshToken = refreshToken;
+  const savedUser = await user.save();
+  if (!savedUser) {
+    throw new ApiError(501, "unable to login user");
+  }
+  //send response with cookies
+  res
+    .status(201)
+    .cookie("ACCESS_TOKEN", accessToken, { maxAge: 100000 })
+    .send(
+      new ApiResponse(201, {
+        username: savedUser.username,
+        email: savedUser.email,
+        refreshToken: savedUser.refreshToken,
+        starred: savedUser.starred,
+      }),
+    );
+});
 
 export { registerUser, loginUser };
