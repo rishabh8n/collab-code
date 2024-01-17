@@ -1,8 +1,15 @@
 import { Request, Response, NextFunction } from "express";
 import { ApiError } from "./ApiError";
+import { CustomRequest } from "../middlewares/auth.middleware";
 export const asyncHandler =
-  (fn: (req: Request, res: Response, next: NextFunction) => any) =>
-  async (req: Request, res: Response, next: NextFunction) => {
+  (
+    fn: (
+      req: Request | CustomRequest,
+      res: Response,
+      next: NextFunction,
+    ) => any,
+  ) =>
+  async (req: Request | CustomRequest, res: Response, next: NextFunction) => {
     try {
       await fn(req, res, next);
     } catch (err) {
