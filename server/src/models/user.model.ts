@@ -1,6 +1,17 @@
-import { Schema, model } from "mongoose";
+import { NextFunction } from "express";
+import bcrypt from "bcrypt";
+import { Schema, model, Document } from "mongoose";
 
-const userSchema = new Schema(
+export interface UserType extends Document {
+  name: string;
+  username: String;
+  email: String;
+  password: string;
+  refreshToken?: String;
+  starred?: String[];
+}
+
+const userSchema = new Schema<UserType>(
   {
     name: {
       type: String,
@@ -36,4 +47,8 @@ const userSchema = new Schema(
   { timestamps: true },
 );
 
+userSchema.pre("save", async function (this: UserType): Promise<void> {
+  if (!this.isModified("password")) return;
+  this.password = await bcrypt.hash(this.password, 10);
+});
 export const User = model("User", userSchema);

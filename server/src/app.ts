@@ -26,6 +26,6 @@ app.get("/", (req, res) => {
 
 //routes
 import userRoute from "./routes/user.routes";
-app.use("/api/user", userRoute);
+app.use("/user", userRoute);
 
 export { app };
