@@ -1,3 +1,4 @@
+import { CustomRequest } from "../middlewares/auth.middleware";
 import { User, UserProps } from "../models/user.model";
 import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
@@ -99,4 +100,23 @@ const loginUser = asyncHandler(async (req: Request, res: Response) => {
     );
 });
 
-export { registerUser, loginUser };
+const logoutUser = asyncHandler(async (req: CustomRequest, res) => {
+  const userId = req.user?._id;
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { $set: { refreshToken: "" } },
+    { new: true },
+  );
+  res
+    .status(201)
+    .clearCookie("ACCESS_TOKEN", {
+      httpOnly: true,
+      secure: true,
+    })
+    .clearCookie("REFRESH_TOKEN", {
+      httpOnly: true,
+      secure: true,
+    })
+    .json(new ApiResponse(201, {}, "Logged out successfully"));
+});
+export { registerUser, loginUser, logoutUser };
