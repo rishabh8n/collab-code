@@ -1,4 +1,4 @@
-import { CustomRequest } from "../middlewares/auth.middleware";
+import { CustomRequest, DecodedData } from "../middlewares/auth.middleware";
 import { User, UserProps } from "../models/user.model";
 import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
@@ -119,4 +119,51 @@ const logoutUser = asyncHandler(async (req: CustomRequest, res) => {
     })
     .json(new ApiResponse(201, {}, "Logged out successfully"));
 });
-export { registerUser, loginUser, logoutUser };
+
+const refreshAccessToken = asyncHandler(async (req: Request, res) => {
+  //get user id
+  try {
+    const refreshToken = req.cookies.REFRESH_TOKEN;
+    if (!refreshToken) throw new ApiError(401, "unauthorized request");
+    let sec = process.env.REFRESH_TOKEN_SECRET as string;
+    const decoded = jwt.verify(refreshToken, sec) as DecodedData;
+    //find user
+    const user = await User.findById(decoded);
+    if (!user) {
+      throw new ApiError(401, "Invalid request token");
+    }
+    //compare refresh token
+    if (user?.refreshToken !== refreshToken) {
+      throw new ApiError(401, "Refresh token is expired or used");
+    }
+
+    //generate new access token
+    const newAccessToken = user.generateAccessToken();
+    const newRefreshToken = user.generateRefreshToken();
+
+    //save new refresh token in database
+    user.refreshToken = newRefreshToken;
+    const savedUser = await user.save();
+    if (!savedUser) {
+      throw new ApiError(501, "unable to process request");
+    }
+    //set new access token in cookie
+    res
+      .status(200)
+      .cookie("ACCESS_TOKEN", newAccessToken, { httpOnly: true, secure: true })
+      .cookie("REFRESH_TOKEN", newRefreshToken, {
+        httpOnly: true,
+        secure: true,
+      })
+      .json(
+        new ApiResponse(
+          200,
+          { accessToken: newAccessToken, refreshToken: newRefreshToken },
+          "Token refreshed successfully",
+        ),
+      );
+  } catch (error: any) {
+    throw new ApiError(401, error?.message || "unable to process request");
+  }
+});
+export { registerUser, loginUser, logoutUser, refreshAccessToken };

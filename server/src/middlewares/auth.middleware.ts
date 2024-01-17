@@ -4,7 +4,7 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import { ApiError } from "../utils/ApiError";
 import { User, UserProps } from "../models/user.model";
 
-interface DecodedData extends JwtPayload {
+export interface DecodedData extends JwtPayload {
   _id: string;
 }
 export interface CustomRequest extends Request {
